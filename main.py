@@ -1,7 +1,20 @@
 from fastapi import FastAPI, APIRouter
 
 from typing import Optional
+from app.schemas import RecipeSearchResults, Recipe
 
+# pydantic: 데이터 검증과 파이썬 타입 어노테이션을 통한 management settings
+from pydantic import BaseModel, HttpUrl
+
+class Car(BaseModel):
+    brand: str
+    color: str
+    gears: int
+
+
+class ParkingLot(BaseModel):
+    cars: list[Car]  # recursively use `Car`
+    spaces: int
 
 # 1 딕셔너리 형태로 예시 데이터 생성
 RECIPES = [
@@ -42,17 +55,16 @@ def root() -> dict:
     """
     return {"msg": "Hello, World!"}
 
-# 2 - New addition, path parameter
 # 매개변수 타입 str로 수정 -> str을 통해 매개변수를 받음 : 파라미터 타입 검증
 # 타입 힌트를 통한 input mistakes 방지
-@api_router.get("/recipe/{recipe_id}", status_code=200)
-def fetch_recipe(*, recipe_id: str) -> dict:  # 3 defines the logic for the new endpoint
-    # endpoint 로직 정의
+# 1 Updated to use a 'response_model'
+# Recipe > BaseModel > BaseModel : 상속
+@api_router.get("/recipe/{recipe_id}", status_code=200, response_model=Recipe)
+def fetch_recipe(*, recipe_id: int) -> dict:
     """
     Fetch a single recipe by ID
     """
-    # 리스트, 반복문, 조건문
-    # 4 json 형식으로 serialized 되어 반환
+
     result = [recipe for recipe in RECIPES if recipe["id"] == recipe_id]
     if result:
         return result[0]
