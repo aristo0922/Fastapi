@@ -1,18 +1,29 @@
-from typing import Union
-from fastapi import FastAPI
-from pydantic import BaseModel
-from typing import Type, Union
+from fastapi import FastAPI, APIRouter
 
-from pydantic import BaseModel
+# 1
+app = FastAPI(
+    title="Recipe API", openapi_url="/openapi.json"
+)
 
-app = FastAPI()
+# 2 APIRouter 인스턴스화
+api_router = APIRouter()
 
-# Recipe 클래스는 BaseModel을 상속한다
-class Recipe(BaseModel):
-    id: int
-    label: str
-    source: str
+# 3 어노테이션? 데코레이터! get메소드 정의.
+# Define a basic GET endpoint for API
+@api_router.get("/", status_code=200)
+def root() -> dict:
+    """
+    Root Get
+    """
+    return {"msg": "Hello, World!"}
 
-raw_recipe = {'id': 1, 'label': 'Lasagna', 'source': 'Grandma Wisdom'}
-structured_recipe = Recipe(**raw_recipe)
-print(structured_recipe.id)
+# 4
+app.include_router(api_router)
+
+
+# 5 모듈이 불릴 때 적용
+# main.py 를 실행할 때 불림
+if __name__ == "__main__":
+    # Use this for debugging purposes only
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001, log_level="debug")
