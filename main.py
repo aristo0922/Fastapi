@@ -1,4 +1,8 @@
 from fastapi import FastAPI, APIRouter
+
+from typing import Optional
+
+
 # 1 딕셔너리 형태로 예시 데이터 생성
 RECIPES = [
     {
@@ -52,6 +56,31 @@ def fetch_recipe(*, recipe_id: str) -> dict:  # 3 defines the logic for the new 
     result = [recipe for recipe in RECIPES if recipe["id"] == recipe_id]
     if result:
         return result[0]
+
+
+
+# New addition, query parameter
+# https://fastapi.tiangolo.com/tutorial/query-params/
+@api_router.get("/search/", status_code=200)
+def search_recipes(
+        #  ex > http://localhost:8001/search/?keyword=chicken&max_results=2
+        # arguments >>   keyword      || max results : default value = 10 (Option)
+        keyword: Optional[str] = None, max_results: Optional[int] = 10
+        #Optional : from Python standard library typing module
+) -> dict:
+    """
+    Search for recipes based on label keyword
+    """
+    if not keyword:
+        # we use Python list slicing to limit results
+        # based on the max_results query parameter
+        return {"results": RECIPES[:max_results]}
+
+    # search -> serialized to JSON by the framework
+    # lambda 매개변수:표현식 ? f(recipe)=keyword.label.lower() https://wikidocs.net/64
+    results = filter(lambda recipe: keyword.lower() in recipe["label"].lower(), RECIPES)
+    return {"results": list(results)[:max_results]}
+
 
 # 4
 app.include_router(api_router)
