@@ -1,15 +1,18 @@
 from typing import Union
-
 from fastapi import FastAPI
+from pydantic import BaseModel
+from typing import Type, Union
+
+from pydantic import BaseModel
 
 app = FastAPI()
 
+# Recipe 클래스는 BaseModel을 상속한다
+class Recipe(BaseModel):
+    id: int
+    label: str
+    source: str
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+raw_recipe = {'id': 1, 'label': 'Lasagna', 'source': 'Grandma Wisdom'}
+structured_recipe = Recipe(**raw_recipe)
+print(structured_recipe.id)
