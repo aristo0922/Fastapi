@@ -39,12 +39,10 @@ def root() -> dict:
     return {"msg": "Hello, World!"}
 
 # 2 - New addition, path parameter
-# https://fastapi.tiangolo.com/tutorial/path-params/
-# create endpoint /recipe/{recipe_id}
-# endpoint ? one end of a communication channel -> 채널 한쪽 끝에 해당하는 URL
-# endpoint 설정
+# 매개변수 타입 str로 수정 -> str을 통해 매개변수를 받음 : 파라미터 타입 검증
+# 타입 힌트를 통한 input mistakes 방지
 @api_router.get("/recipe/{recipe_id}", status_code=200)
-def fetch_recipe(*, recipe_id: int) -> dict:  # 3 defines the logic for the new endpoint
+def fetch_recipe(*, recipe_id: str) -> dict:  # 3 defines the logic for the new endpoint
     # endpoint 로직 정의
     """
     Fetch a single recipe by ID
