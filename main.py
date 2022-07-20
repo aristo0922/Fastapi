@@ -1,6 +1,6 @@
-from fastapi import FastAPI, APIRouter, Query
-from typing import Optional
-from app.schemas import RecipeSearchResults, Recipe
+from fastapi import FastAPI, APIRouter, Query, HTTPException  # 1
+from typing import Optional, Any
+from app.schemas import RecipeSearchResults, Recipe, RecipeCreate
 
 # 1 딕셔너리 형태로 예시 데이터 생성
 RECIPES = [
@@ -39,14 +39,21 @@ def root() -> dict:
 
 # Recipe > BaseModel > BaseModel : 상속
 @api_router.get("/recipe/{recipe_id}", status_code=200, response_model=Recipe)
-def fetch_recipe(*, recipe_id: int) -> dict:
+def fetch_recipe(*, recipe_id: int) -> Any:
     """
     Fetch a single recipe by ID
     """
 
     result = [recipe for recipe in RECIPES if recipe["id"] == recipe_id]
-    if result:
-        return result[0]
+    if not result:
+        # the exception is raised, not returned - you will get a validation
+        # error otherwise.
+        # 2
+        raise HTTPException(
+            status_code=404, detail="Recipe with ID {recipe_id} not found"
+        )
+
+    return result[0]
 
 
 
@@ -70,6 +77,26 @@ def search_recipes(
     # lambda 매개변수:표현식 ? f(recipe)=keyword.label.lower() https://wikidocs.net/64
     results = filter(lambda recipe: keyword.lower() in recipe["label"].lower(), RECIPES)
     return {"results": list(results)[:max_results]}
+
+# New addition, using Pydantic model `RecipeCreate` to define
+# the POST request body
+# 1
+@api_router.post("/recipe/", status_code=201, response_model=Recipe)
+def create_recipe(*, recipe_in: RecipeCreate) -> dict:  # 2
+    """
+    Create a new recipe (in memory only)
+    """
+    new_entry_id = len(RECIPES) + 1
+    recipe_entry = Recipe(
+        id=new_entry_id,
+        label=recipe_in.label,
+        source=recipe_in.source,
+        url=recipe_in.url,
+    )
+    RECIPES.append(recipe_entry.dict())  # 3
+
+    return recipe_entry
+
 
 app.include_router(api_router)
 
